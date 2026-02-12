@@ -1,0 +1,15 @@
+# Nextflow
+.nextflow*
+work/
+trace.txt*
+timeline.html
+report.html
+dag.html
+
+# Results/data (do not commit FASTQ or large outputs)
+data/
+results/
+
+# Logs / OS
+*.log
+.DS_Store
