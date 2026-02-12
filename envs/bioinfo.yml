@@ -1,0 +1,13 @@
+name: bioinfo
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - fastp
+  - bwa
+  - samtools
+  - bcftools
+  - htslib
+  - fasttree
+  - python
+  - pip
