@@ -13,3 +13,11 @@ results/
 # Logs / OS
 *.log
 .DS_Store
+
+# Nextflow artifacts
+report-*.html
+trace-*.txt
+timeline-*.html
+dag-*.html
+.nextflow.log*
+work/
