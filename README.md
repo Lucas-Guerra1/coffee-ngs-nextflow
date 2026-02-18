@@ -1,94 +1,94 @@
 # SNP Phylogenomics Pipeline (Nextflow DSL2)
 
-Pipeline automatizado para **detecção de SNPs, construção de alinhamento genômico e inferência filogenética** a partir de dados de sequenciamento paired-end (Illumina), utilizando **Nextflow DSL2**.
+An automated pipeline for **SNP detection, genome alignment construction, and phylogenetic inference** from paired-end sequencing data (Illumina), implemented using **Nextflow DSL2**.
 
-O workflow realiza:
+The workflow performs:
 
-* controle de qualidade de reads
-* alinhamento ao genoma de referência
-* chamada de variantes por amostra
-* filtragem de SNPs
-* merge multi-amostras
-* conversão para alinhamento FASTA
-* inferência de árvore filogenética
+* read quality control
+* reference genome alignment
+* per-sample variant calling
+* SNP filtering
+* multi-sample VCF merging
+* FASTA alignment generation
+* phylogenetic tree inference
 
-O pipeline é totalmente reprodutível, modular e escalável.
+The pipeline is fully reproducible, modular, and scalable.
 
 ---
 
-## Visão Geral do Workflow
+## Workflow Overview
 
-O pipeline executa as seguintes etapas:
+The pipeline executes the following steps:
 
 ```
-Reads → QC → Alinhamento → Variant Calling → SNP Filter → Merge → SNP Alignment → Phylogeny
+Reads → QC → Alignment → Variant Calling → SNP Filter → Merge → SNP Alignment → Phylogeny
 ```
 
-### Etapas detalhadas
+### Detailed Steps
 
-1. **Indexação da referência**
+1. **Reference indexing**
 
    * `bwa index`
 
-2. **Controle de qualidade e trimming**
+2. **Quality control and trimming**
 
    * `fastp`
-   * detecção automática de adaptadores
+   * automatic adapter detection
 
-3. **Alinhamento ao genoma**
+3. **Genome alignment**
 
    * `bwa mem`
-   * ordenação e indexação com `samtools`
+   * sorting and indexing with `samtools`
 
-4. **Chamada de variantes por amostra**
+4. **Per-sample variant calling**
 
    * `bcftools mpileup`
    * `bcftools call`
 
-5. **Filtragem de SNPs**
+5. **SNP filtering**
 
-   * apenas variantes bialélicas
+   * retains only biallelic variants
 
-6. **Merge de VCFs multi-amostras**
+6. **Multi-sample VCF merging**
 
    * `bcftools merge`
 
-7. **Conversão de SNPs para alinhamento FASTA**
+7. **Conversion of SNPs to FASTA alignment**
 
-   * gera matriz SNP concatenada
-   * substitui nomes genéricos pelos nomes reais das amostras
+   * generates concatenated SNP matrix
+   * replaces generic sample names with actual sample identifiers
 
-8. **Inferência filogenética**
+8. **Phylogenetic inference**
 
    * `FastTree`
-   * modelo GTR
+   * GTR model
 
 ---
 
-## Estrutura de Saída
+## Output Structure
 
 ```
 results/
-├── 00_ref_index/        # Índices BWA da referência
-├── 01_fastp/            # Reads filtrados
-├── 02_bam/              # BAMs alinhados e indexados
-├── 03_vcf/              # VCFs por amostra
-├── 04_snps/             # VCFs contendo apenas SNPs
-├── 05_merged_vcf/       # VCF multi-amostras
-├── 06_alignment/        # Alinhamento SNP em FASTA
-└── 07_tree/             # Árvore filogenética (Newick)
+├── 00_ref_index/        # BWA reference indices
+├── 01_fastp/            # Filtered reads
+├── 02_bam/              # Aligned and indexed BAM files
+├── 03_vcf/              # Per-sample VCF files
+├── 04_snps/             # SNP-only VCF files
+├── 05_merged_vcf/       # Multi-sample VCF
+├── 06_alignment/        # SNP FASTA alignment
+└── 07_tree/             # Phylogenetic tree (Newick)
 ```
 
 ---
 
-## Requisitos
+## Requirements
 
 ### Software
 
 * Nextflow ≥ 22
-* Conda ou Mamba
+* Conda or Mamba
 
-### Ferramentas instaladas via ambiente Conda
+### Tools installed via Conda environment
 
 * bwa
 * fastp
@@ -96,41 +96,41 @@ results/
 * bcftools
 * FastTree
 
-O pipeline utiliza:
+The pipeline uses:
 
 ```
 envs/bioinfo.yml
 ```
 
-para gerenciar dependências.
+to manage dependencies.
 
 ---
 
-## Formato de Entrada
+## Input Format
 
 ### Reads
 
-O pipeline espera arquivos paired-end com padrão:
+The pipeline expects paired-end FASTQ files with naming pattern:
 
 ```
 data/sample_1.fastq.gz
 data/sample_2.fastq.gz
 ```
 
-ou
+or
 
 ```
 data/SAMPLEID_R1.fastq.gz
 data/SAMPLEID_R2.fastq.gz
 ```
 
-Configurável via:
+Configurable via:
 
 ```
 --reads
 ```
 
-Padrão:
+Default:
 
 ```
 data/*_{1,2}.fastq.gz
@@ -138,15 +138,15 @@ data/*_{1,2}.fastq.gz
 
 ---
 
-### Genoma de Referência
+### Reference Genome
 
-Arquivo FASTA:
+FASTA file:
 
 ```
 data/ref.fa
 ```
 
-Configurável via:
+Configurable via:
 
 ```
 --ref_fasta
@@ -154,9 +154,9 @@ Configurável via:
 
 ---
 
-## Execução
+## Execution
 
-### Execução básica
+### Basic run
 
 ```bash
 nextflow run main.nf
@@ -164,7 +164,7 @@ nextflow run main.nf
 
 ---
 
-### Execução com parâmetros explícitos
+### Run with explicit parameters
 
 ```bash
 nextflow run main.nf \
@@ -175,7 +175,7 @@ nextflow run main.nf \
 
 ---
 
-### Execução com múltiplos CPUs
+### Run with multiple CPUs
 
 ```bash
 nextflow run main.nf -process.cpus 8
@@ -183,108 +183,110 @@ nextflow run main.nf -process.cpus 8
 
 ---
 
-## Parâmetros
+## Parameters
 
-| Parâmetro     | Descrição                                 | Padrão                  |
-| ------------- | ----------------------------------------- | ----------------------- |
-| `--reads`     | Padrão glob dos arquivos FASTQ paired-end | `data/*_{1,2}.fastq.gz` |
-| `--ref_fasta` | Genoma de referência                      | `data/ref.fa`           |
-| `--outdir`    | Diretório de saída                        | `results`               |
+| Parameter     | Description                             | Default                 |
+| ------------- | --------------------------------------- | ----------------------- |
+| `--reads`     | Glob pattern for paired-end FASTQ files | `data/*_{1,2}.fastq.gz` |
+| `--ref_fasta` | Reference genome                        | `data/ref.fa`           |
+| `--outdir`    | Output directory                        | `results`               |
 
-O pipeline valida automaticamente parâmetros obrigatórios.
+The pipeline automatically validates required parameters.
 
 ---
 
-## Arquivos Gerados
+## Generated Files
 
-### Variant Calling
+### Variant Calling Outputs
 
 * `*.sorted.bam`
 * `*.vcf.gz`
 * `*.snps.vcf.gz`
 
-### Filogenia
+### Phylogenetic Outputs
 
-* `snp_alignment.fasta` — matriz SNP concatenada
-* `tree.nwk` — árvore filogenética
-
----
-
-## Descrição Técnica
-
-### Estratégia de SNP Alignment
-
-O pipeline:
-
-* extrai apenas posições SNP
-* remove fases (`/` e `|`)
-* usa primeiro alelo por posição
-* substitui dados ausentes por `N`
-* concatena SNPs para cada amostra
-* gera FASTA multi-sequência
-
-Esse método é adequado para:
-
-* filogenômica bacteriana
-* epidemiologia molecular
-* análise populacional baseada em SNP
+* `snp_alignment.fasta` — concatenated SNP matrix
+* `tree.nwk` — phylogenetic tree
 
 ---
 
-## Arquitetura do Pipeline
+## Technical Description
 
-Implementado em **Nextflow DSL2** com:
+### SNP Alignment Strategy
 
-* processos modulares independentes
-* canais tipados
-* paralelização automática
-* reprodutibilidade via Conda
-* execução local ou HPC compatível
+The pipeline:
 
----
+* extracts only SNP positions
+* removes phasing symbols (`/` and `|`)
+* uses the first allele per position
+* replaces missing data with `N`
+* concatenates SNPs per sample
+* generates multi-sequence FASTA alignment
 
-## Reprodutibilidade
+This approach is suitable for:
 
-O pipeline garante reprodutibilidade via:
-
-* versionamento de ambiente
-* isolamento Conda
-* rastreamento de execução Nextflow
-* outputs determinísticos
+* bacterial phylogenomics
+* molecular epidemiology
+* SNP-based population analysis
 
 ---
 
-## Casos de Uso
+## Pipeline Architecture
 
-* filogenia bacteriana baseada em SNP
-* análise comparativa de genomas
-* vigilância epidemiológica
-* estudos populacionais
-* análise evolutiva
+Implemented in **Nextflow DSL2** with:
 
----
-
-## Limitações
-
-* assume dados Illumina paired-end
-* utiliza apenas SNPs bialélicos
-* não realiza filtragem avançada de qualidade de variantes
-* não executa masking de regiões repetitivas
-* não inclui filtragem de recombinação
+* independent modular processes
+* typed channels
+* automatic parallelization
+* reproducibility via Conda environments
+* compatibility with local and HPC execution
 
 ---
 
-## Melhorias Futuras Sugeridas
+## Reproducibility
 
-* filtros de qualidade de SNP (DP, MQ, QUAL)
-* masking de regiões repetitivas
-* detecção de recombinação
-* suporte a dados long-read
-* modelos filogenéticos adicionais
-* relatório de QC automatizado
+The pipeline ensures reproducibility through:
+
+* environment versioning
+* Conda isolation
+* Nextflow execution tracking
+* deterministic outputs
 
 ---
 
-## Licença
+## Use Cases
 
-Definir conforme necessidade do projeto.
+* SNP-based bacterial phylogeny
+* comparative genomics
+* epidemiological surveillance
+* population studies
+* evolutionary analysis
+
+---
+
+## Limitations
+
+* assumes Illumina paired-end data
+* retains only biallelic SNPs
+* does not perform advanced variant quality filtering
+* does not mask repetitive regions
+* does not include recombination filtering
+
+---
+
+## Suggested Future Improvements
+
+* SNP quality filtering (DP, MQ, QUAL thresholds)
+* repetitive region masking
+* recombination detection
+* long-read data support
+* additional phylogenetic models
+* automated QC reporting
+
+---
+
+## License
+
+MIT License
+
+Copyright (c) 2026
